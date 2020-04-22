@@ -1088,7 +1088,7 @@ next_step:
 
 	if (gc_type == FG_GC) {
 
-		do_write_data_queue();
+//		do_write_data_queue(); //Disabled to implement multiple segment sorting by Jonggyu
 //		f2fs_submit_merged_bio(sbi, DATA, WRITE);
 		if (get_valid_blocks(sbi, segno, 1) == 0){
 			return 1;
@@ -1130,7 +1130,7 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi, unsigned int segno,
 
 	/* read segment summary of victim */
 	sum_page = get_sum_page(sbi, segno);
-	blk_start_plug(&plug);
+//	blk_start_plug(&plug);  //Disabled by Jonggyu
 
 	sum = page_address(sum_page);
 
@@ -1152,7 +1152,7 @@ static int do_garbage_collect(struct f2fs_sb_info *sbi, unsigned int segno,
 								segno, gc_type);
 		break;
 	}
-	blk_finish_plug(&plug);
+//	blk_finish_plug(&plug); //Disabled by Jonggyu
 
 	stat_inc_seg_count(sbi, GET_SUM_TYPE((&sum->footer)), gc_type);
 	stat_inc_call_count(sbi->stat_info);
@@ -1172,6 +1172,11 @@ int f2fs_gc(struct f2fs_sb_info *sbi, bool sync)
 		.ilist = LIST_HEAD_INIT(gc_list.ilist),
 		.iroot = RADIX_TREE_INIT(GFP_NOFS),
 	};
+
+	struct blk_plug plug; //Added by Jonggyu
+	
+	/* Fixed by Jonggyu */
+	gc_type = FG_GC;
 
 	cpc.reason = __get_cp_reason(sbi);
 gc_more:
@@ -1208,6 +1213,10 @@ gc_more:
 			break;
 	}
 
+	blk_start_plug(&plug); //Added by Jonggyu
+	do_write_data_queue();
+	blk_finish_plug(&plug); //Added by Jonggyu
+	
 	if (i == sbi->segs_per_sec && gc_type == FG_GC)
 		sec_freed++;
 
