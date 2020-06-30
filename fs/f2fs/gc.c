@@ -1208,9 +1208,7 @@ gc_more:
 		 * for FG_GC case, halt gcing left segments once failed one
 		 * of segments in selected section to avoid long latency.
 		 */
-		if (!do_garbage_collect(sbi, segno + i, &gc_list, gc_type) &&
-				gc_type == FG_GC)
-			break;
+		do_garbage_collect(sbi, segno + i, &gc_list, gc_type);
 	}
 
 	blk_start_plug(&plug); //Added by Jonggyu
